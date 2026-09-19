@@ -1,0 +1,22 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "winston"
+version = "0.1.0"
+description = "Winston, the research group's Zulip bot"
+requires-python = ">=3.11"
+dependencies = ["zulip>=0.9.1", "tzdata"]
+
+[project.optional-dependencies]
+dev = ["pytest>=8"]
+
+[project.scripts]
+winston = "winston.__main__:main"
+
+[tool.setuptools.packages.find]
+include = ["winston*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]

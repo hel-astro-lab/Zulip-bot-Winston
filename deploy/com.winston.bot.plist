@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!-- macOS launchd user agent. launchd does not expand ~, so edit the three absolute paths. -->
+<plist version="1.0">
+<dict>
+  <key>Label</key>
+  <string>com.winston.bot</string>
+  <key>ProgramArguments</key>
+  <array>
+    <string>/Users/jnattila/Dropbox/projects/tools/zulip-winston/.venv/bin/winston</string>
+    <string>run</string>
+    <string>--config</string>
+    <string>/Users/jnattila/.config/winston/winston.toml</string>
+  </array>
+  <key>EnvironmentVariables</key>
+  <dict>
+    <key>PYTHONUNBUFFERED</key>
+    <string>1</string>
+  </dict>
+  <key>RunAtLoad</key>
+  <true/>
+  <key>KeepAlive</key>
+  <true/>
+  <key>ThrottleInterval</key>
+  <integer>10</integer>
+  <key>StandardOutPath</key>
+  <string>/Users/jnattila/Library/Logs/winston/winston.log</string>
+  <key>StandardErrorPath</key>
+  <string>/Users/jnattila/Library/Logs/winston/winston.log</string>
+</dict>
+</plist>

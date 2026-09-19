@@ -1,0 +1,16 @@
+# systemd unit for a Linux host. Install to /etc/systemd/system/winston.service.
+[Unit]
+Description=Winston, the research group's Zulip bot
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=winston
+Group=winston
+ExecStart=/opt/winston/.venv/bin/winston run --config /etc/winston/winston.toml
+Restart=always
+RestartSec=10
+Environment=PYTHONUNBUFFERED=1
+
+[Install]
+WantedBy=multi-user.target

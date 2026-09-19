@@ -1,0 +1,30 @@
+# Winston configuration. Copy to ~/.config/winston/winston.toml and edit.
+# Relative paths are taken from this file's directory.
+
+timezone = "Europe/Helsinki"   # for scheduled features
+zuliprc = "zuliprc"            # bot credentials downloaded from Zulip (or set ZULIP_CONFIG instead)
+state_file = "state.json"      # last handled message id and last fire dates
+catch_up_hours = 24            # on start, handle messages missed while offline that are at most this old
+
+[features.arxiv]
+channels = ["papers"]          # channels where an arXiv link gets a paper card
+
+[features.help]
+
+[features.menu]
+enabled = false                # placeholder until the menu fetcher exists
+at = "11:15"
+channel = "general"
+topic = "lunch"
+grace_minutes = 120            # still post if Winston wakes up this late
+
+[features.digest]
+at = "08:00"                   # arXiv announces at 00:00 New York time on weekdays
+channel = "papers"
+topic = "Daily Arxiv Highlights"
+categories = ["astro-ph"]      # any arXiv category or archive, e.g. "astro-ph.HE"
+announce_types = ["new", "cross"]   # add "replace" to also flag new versions of old papers
+authors = "authors.txt"        # names to watch for, one per line, relative to this file
+max_listed_authors = 6         # longer author lists are shortened to the first three plus the matches
+# First line of the post; placeholders: {categories}, {date}, {n}, {papers} ("3 papers")
+header = "**arXiv {categories}, {date}**"

@@ -1,0 +1,59 @@
+<?xml version='1.0' encoding='UTF-8'?>
+<feed xmlns:opensearch="http://a9.com/-/spec/opensearch/1.1/" xmlns:arxiv="http://arxiv.org/schemas/atom" xmlns="http://www.w3.org/2005/Atom">
+  <id>https://arxiv.org/api/FS8Qv/nzCj9qBPx9GT01skU8njE</id>
+  <title>arXiv Query: search_query=&amp;id_list=2406.01234,astro-ph/0601001&amp;start=0&amp;max_results=10</title>
+  <updated>2026-09-18T17:53:51Z</updated>
+  <link href="https://arxiv.org/api/query?search_query=&amp;start=0&amp;max_results=10&amp;id_list=2406.01234,astro-ph/0601001" type="application/atom+xml"/>
+  <opensearch:itemsPerPage>10</opensearch:itemsPerPage>
+  <opensearch:totalResults>2</opensearch:totalResults>
+  <opensearch:startIndex>0</opensearch:startIndex>
+  <entry>
+    <id>http://arxiv.org/abs/2406.01234v1</id>
+    <title>Achieving Tractable Minimax Optimal Regret in Average Reward MDPs</title>
+    <updated>2024-06-03T11:53:44Z</updated>
+    <link href="https://arxiv.org/abs/2406.01234v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/2406.01234v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>In recent years, significant attention has been directed towards learning average-reward Markov Decision Processes (MDPs). However, existing algorithms either suffer from sub-optimal regret guarantees or computational inefficiencies. In this paper, we present the first tractable algorithm with minimax optimal regret of $\widetilde{\mathrm{O}}(\sqrt{\mathrm{sp}(h^*) S A T})$, where $\mathrm{sp}(h^*)$ is the span of the optimal bias function $h^*$, $S \times A$ is the size of the state-action space and $T$ the number of learning steps. Remarkably, our algorithm does not require prior information on $\mathrm{sp}(h^*)$. Our algorithm relies on a novel subroutine, Projected Mitigated Extended Value Iteration (PMEVI), to compute bias-constrained optimal policies efficiently. This subroutine can be applied to various previous algorithms to improve regret bounds.</summary>
+    <category term="cs.LG" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="eess.SY" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="math.OC" scheme="http://arxiv.org/schemas/atom"/>
+    <category term="stat.ML" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2024-06-03T11:53:44Z</published>
+    <arxiv:primary_category term="cs.LG"/>
+    <author>
+      <name>Victor Boone</name>
+    </author>
+    <author>
+      <name>Zihan Zhang</name>
+    </author>
+  </entry>
+  <entry>
+    <id>http://arxiv.org/abs/astro-ph/0601001v1</id>
+    <title>Frequency of Hot Jupiters and Very Hot Jupiters from the OGLE-III Transit Surveys Toward the Galactic Bulge and Carina</title>
+    <updated>2006-01-02T14:57:58Z</updated>
+    <link href="https://arxiv.org/abs/astro-ph/0601001v1" rel="alternate" type="text/html"/>
+    <link href="https://arxiv.org/pdf/astro-ph/0601001v1" rel="related" type="application/pdf" title="pdf"/>
+    <summary>  We derive the frequencies of hot Jupiters (HJs) with 3--5 day periods and very hot Jupiters (VHJs) with 1-3 day periods by comparing the planets actually detected in the OGLE-III survey with those predicted by our models. The models are constructed following Gould &amp; Morgan (2003) by populating the line of sight with stars drawn from the Hipparcos catalog. Using these, we demonstrate that the number of stars with sensitivity to HJs and VHJs is only 4--16% of those in the OGLE-III fields satisfying the spectroscopic-followup limit of V_max&lt;17.5. Hence, the frequencies we derive are much higher than a naive estimate would indicate. We find that at 90% confidence the fraction of stars with planets in the two period ranges is (1/310)(1^{+1.39}_{-0.59}) for HJs and (1/690)(1^{+1.10}_{-0.54}) for VHJs. The HJ rate is statistically indistinguishable from that found in radial velocity (RV) studies. However, we note that magnitude-limited RV samples are heavily biased toward metal-rich (hence, planet-bearing) stars, while transit surveys are not, and therefore we expect that more sensitive transit surveys should find a deficit of HJs as compared to RV surveys. The detection of 3 transiting VHJs, all with periods less than 2 days, is marginally consistent with the complete absence of such detections in RV surveys. The planets detected are consistent with being uniformly distributed between 1.00 and 1.25 Jovian radii, but there are too few in the sample to map this distribution in detail.</summary>
+    <category term="astro-ph" scheme="http://arxiv.org/schemas/atom"/>
+    <published>2006-01-02T14:57:58Z</published>
+    <arxiv:comment>62 pages including 16 figures and 9 tables. Submitted to Acta Astronomica. Full resolution version at http://www.astronomy.ohio-state.edu/~gould/ogle_hot_jupiters.ps.gz</arxiv:comment>
+    <arxiv:primary_category term="astro-ph"/>
+    <arxiv:journal_ref>ActaAstron.56:1-50,2006</arxiv:journal_ref>
+    <author>
+      <name>Andrew Gould</name>
+      <arxiv:affiliation>Ohio State</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Susan Dorsher</name>
+      <arxiv:affiliation>Ohio State</arxiv:affiliation>
+    </author>
+    <author>
+      <name>B. Scott Gaudi</name>
+      <arxiv:affiliation>CfA</arxiv:affiliation>
+    </author>
+    <author>
+      <name>Andrzej Udalski</name>
+      <arxiv:affiliation>Warsaw University Observatory</arxiv:affiliation>
+    </author>
+  </entry>
+</feed>
