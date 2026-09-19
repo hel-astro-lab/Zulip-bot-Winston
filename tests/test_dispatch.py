@@ -42,7 +42,7 @@ def test_unknown_paper_is_silent_in_channel_but_reported_on_command(make_bot, fa
     bot._on_event(event(stream_message(1, "https://arxiv.org/abs/9999.99999")))
     assert bot.client.sent == []
     bot._on_event(event(dm_message(2, "arxiv 9999.99999")))
-    assert bot.client.sent[-1] == {"type": "private", "to": [1], "content": "arXiv does not know `9999.99999`."}
+    assert bot.client.sent[-1]["to"] == [1] and bot.client.sent[-1]["content"].startswith("I could not find `9999.99999`.")
 
 
 def test_mention_help_and_unknown_command(make_bot):
@@ -52,7 +52,7 @@ def test_mention_help_and_unknown_command(make_bot):
     assert "- **arxiv**:" in bot.client.sent[0]["content"] and "- **help**:" in bot.client.sent[0]["content"]
     assert "menu" not in bot.client.sent[0]["content"]  # disabled in the test config
     bot._on_event(event(stream_message(2, "hey @**Winston|99** what's up", stream="general", mentioned=True)))
-    assert bot.client.sent[1]["content"].startswith("Sorry, I don't understand")
+    assert bot.client.sent[1]["content"].startswith("That one went past me")
 
 
 def test_dm_arxiv_command_with_bare_id(make_bot, fake_fetch):
@@ -61,7 +61,7 @@ def test_dm_arxiv_command_with_bare_id(make_bot, fake_fetch):
     assert fake_fetch == [["2406.01234"]]
     assert bot.client.sent[0]["type"] == "private" and bot.client.sent[0]["to"] == [1]
     bot._on_event(event(dm_message(2, "arxiv")))
-    assert bot.client.sent[1]["content"].startswith("Usage:")
+    assert "`arxiv <arXiv id or link>`" in bot.client.sent[1]["content"]
 
 
 def test_fetch_failure_does_not_raise(make_bot, monkeypatch):

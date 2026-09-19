@@ -184,10 +184,10 @@ def test_digest_command_replies_with_count(digest_bot):
     digest_bot._on_event(event(dm_message(1, "digest")))
     assert digest_bot.client.sent[0]["to"] == "papers-test"
     assert digest_bot.client.sent[1] == {
-        "type": "private", "to": [1], "content": "Posted 3 papers to #**papers-test>Winston's Daily Arxiv Highlights**."
+        "type": "private", "to": [1], "content": "3 notable papers, filed in #**papers-test>Winston's Daily Arxiv Highlights**."
     }
     digest_bot._on_event(event(dm_message(2, "digest")))
-    assert digest_bot.client.sent[2]["content"] == "Nothing new to post."
+    assert digest_bot.client.sent[2]["content"] == "Nothing to report. Even the arXiv has a rest frame."
 
 
 def test_digest_header_template(make_bot, monkeypatch, tmp_path):

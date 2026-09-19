@@ -7,7 +7,7 @@ from winston.features.base import Feature
 
 class Menu(Feature):
     name = "menu"
-    description = "posts the university cafeteria menu every day"
+    description = "I post the lunch menu each day and grade it on a scale from banana to no banana"
 
     def run(self, bot):
         bot.post(self.settings["channel"], self.settings.get("topic", "lunch"), "Cafeteria menu: not implemented yet.")

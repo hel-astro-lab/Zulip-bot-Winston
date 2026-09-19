@@ -14,8 +14,8 @@ log = logging.getLogger(__name__)
 class ArxivLinks(Feature):
     name = "arxiv"
     description = (
-        "when an arXiv link is posted in a watched channel I reply with title, authors and "
-        "abstract; `arxiv <id or link>` asks for one explicitly"
+        "post an arXiv link and I shall swing by with the title, authors, and abstract; "
+        "`arxiv <id or link>` works anywhere, no tensor algebra required"
     )
     RECENT_LIMIT = 500
 
@@ -41,7 +41,7 @@ class ArxivLinks(Feature):
         if argument is not None:
             ids = arxiv.extract_ids(argument) or arxiv.extract_ids("arXiv:" + argument)
             if not ids:
-                bot.reply(msg, "Usage: `arxiv <arXiv id or link>`")
+                bot.reply(msg, "We shall look it up, but I need coordinates: `arxiv <arXiv id or link>`. Even Kepler needed Tycho's data.")
                 return
         else:
             ids = [i for i in arxiv.extract_ids(msg.content) if self._first_time(msg, i)]
@@ -57,7 +57,7 @@ class ArxivLinks(Feature):
         found = {paper.id.lower() for paper in papers}
         for missing in (i for i in ids if i.lower() not in found):
             if argument is not None:
-                bot.reply(msg, f"arXiv does not know `{missing}`.")
+                bot.reply(msg, f"I could not find `{missing}`. Either it is behind the event horizon or the id needs a second look.")
             else:
                 log.info("arXiv does not know %s (message %s)", missing, msg.id)
 

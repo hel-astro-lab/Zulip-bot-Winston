@@ -161,7 +161,7 @@ class Winston:
                 except Exception:
                     log.exception("feature %s failed on message %s", feature.name, msg.id)
             if not handled and msg.command is not None:
-                self.reply(msg, f"Sorry, I don't understand that. Try `@**{self.name}** help`.")
+                self.reply(msg, "That one went past me like a neutrino through lead. Try `help` and we shall try again.")
         with self._lock:
             self._state["last_message_id"] = max(self._state.get("last_message_id") or 0, msg.id)
             self._save_state()

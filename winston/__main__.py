@@ -20,14 +20,15 @@ def _config_path(given: Path | None) -> Path:
 
 
 def main(argv: list[str] | None = None) -> None:
+    common = argparse.ArgumentParser(add_help=False)
+    common.add_argument("--config", type=Path, help="winston.toml (default: ./winston.toml, then ~/.config/winston/winston.toml)")
+    common.add_argument("-v", "--verbose", action="store_true", help="debug logging")
     parser = argparse.ArgumentParser(prog="winston", description="Winston, the research group's Zulip bot")
-    parser.add_argument("--config", type=Path, help="winston.toml (default: ./winston.toml, then ~/.config/winston/winston.toml)")
-    parser.add_argument("-v", "--verbose", action="store_true", help="debug logging")
     commands = parser.add_subparsers(dest="command", required=True)
-    commands.add_parser("run", help="start the bot")
-    check = commands.add_parser("check", help="fetch one arXiv paper and print its card; no Zulip needed")
+    commands.add_parser("run", parents=[common], help="start the bot")
+    check = commands.add_parser("check", parents=[common], help="fetch one arXiv paper and print its card; no Zulip needed")
     check.add_argument("id_or_url")
-    once = commands.add_parser("run-feature", help="run one scheduled feature once and exit")
+    once = commands.add_parser("run-feature", parents=[common], help="run one scheduled feature once and exit")
     once.add_argument("name")
     args = parser.parse_args(argv)
 

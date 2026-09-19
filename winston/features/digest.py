@@ -123,7 +123,7 @@ def given_names_match(entry: tuple[str, ...], author: tuple[str, ...]) -> bool:
 
 class Digest(Feature):
     name = "digest"
-    description = "every morning I post the day's arXiv papers by people on our author list; `digest` runs it now"
+    description = "every morning I comb the new astro-ph listings for papers and bananas; `digest` asks me to do it right now"
 
     @property
     def categories(self) -> list[str]:
@@ -144,9 +144,9 @@ class Digest(Feature):
     def handle(self, msg, bot):
         count = self.post_digest(bot)
         if count:
-            bot.reply(msg, f"Posted {count} paper{'s' if count != 1 else ''} to #**{self.settings['channel']}>{self.settings['topic']}**.")
+            bot.reply(msg, f"{count} notable paper{'s' if count != 1 else ''}, filed in #**{self.settings['channel']}>{self.settings['topic']}**.")
         else:
-            bot.reply(msg, "Nothing new to post.")
+            bot.reply(msg, "Nothing to report. Even the arXiv has a rest frame.")
 
     # ----- the digest ----------------------------------------------------------------------
 

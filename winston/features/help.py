@@ -13,6 +13,6 @@ class Help(Feature):
         return msg.command is not None and msg.command.strip().lower() in ("", "help")
 
     def handle(self, msg, bot):
-        lines = [f"Hi, I'm {bot.name}. Here is what I do:"]
+        lines = [f"G'day! {bot.name} here, professor, primate, and pillar of the astroplasma community. Here is what I can do for you:"]
         lines += [f"- **{feature.name}**: {feature.description}" for feature in bot.features]
         bot.reply(msg, "\n".join(lines))
