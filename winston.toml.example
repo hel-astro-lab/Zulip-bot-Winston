@@ -28,3 +28,6 @@ authors = "authors.txt"        # names to watch for, one per line, relative to t
 max_listed_authors = 6         # longer author lists are shortened to the first three plus the matches
 # First line of the post; placeholders: {categories}, {date}, {n}, {papers} ("3 papers")
 header = "**arXiv {categories}, {date}**"
+
+[features.secret]
+secrets = "secrets.txt"        # one phrase per line, told one per day in direct messages; kept out of git

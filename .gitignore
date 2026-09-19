@@ -6,3 +6,4 @@ winston.toml
 zuliprc
 state.json
 authors.txt
+secrets.txt

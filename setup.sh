@@ -19,6 +19,7 @@ install_example() {   # install_example <example file> <destination name>
 
 install_example winston.toml.example winston.toml
 install_example authors.txt.example authors.txt
+install_example secrets.txt.example secrets.txt
 
 echo
 if [ -e "$target/zuliprc" ]; then

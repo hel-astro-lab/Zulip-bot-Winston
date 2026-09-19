@@ -5,7 +5,8 @@ from winston.features.base import Feature
 from winston.features.digest import Digest
 from winston.features.help import Help
 from winston.features.menu import Menu
+from winston.features.secret import Secret
 
-FEATURES: list[type[Feature]] = [ArxivLinks, Digest, Help, Menu]
+FEATURES: list[type[Feature]] = [ArxivLinks, Digest, Help, Menu, Secret]
 
 __all__ = ["FEATURES", "Feature"]
