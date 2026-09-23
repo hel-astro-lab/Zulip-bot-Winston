@@ -1,6 +1,6 @@
 # Winston
 
-Winston is a Zulip *generic bot*. The bot long-polls the Zulip event API, so it sees every message in the channels it is subscribed to plus every direct message and @-mention, and replies through the REST API. It runs on any machine with outbound HTTPS to the Zulip server. A laptop is fine: after a restart Winston reads the messages it missed and answers those still unanswered.
+Winston is a Zulip *generic bot*. The bot long-polls the Zulip event API, so it sees every message in the channels it is subscribed to plus every direct message and @-mention, and replies through the REST API. It runs on any machine with outbound HTTPS to the Zulip server. A laptop is fine. Zulip drops an idle event queue after about ten minutes, so messages sent while the machine sleeps are never delivered; every few minutes, and on waking, Winston re-reads the watched channels and answers any arXiv link that has no card yet, up to `catch_up_hours` old.
 
 Features are classes in `winston/features/`. A feature reacts to messages, runs on a daily schedule, or both. To add one, write the class and register it in `winston/features/__init__.py`.
 

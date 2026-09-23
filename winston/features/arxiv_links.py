@@ -53,6 +53,7 @@ class ArxivLinks(Feature):
             log.exception("arXiv fetch failed for %s", ids)
             return
         for paper in papers:
+            log.info("answering arXiv:%s from message %s", paper.id, msg.id)
             bot.reply(msg, arxiv.format_paper(paper))
         found = {paper.id.lower() for paper in papers}
         for missing in (i for i in ids if i.lower() not in found):
@@ -70,6 +71,6 @@ class ArxivLinks(Feature):
             self._recent.popitem(last=False)
         return True
 
-    def remember_own(self, msg):
+    def remember(self, msg):
         for arxiv_id in arxiv.extract_ids(msg.content):
             self._first_time(msg, arxiv_id)

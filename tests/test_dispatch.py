@@ -1,4 +1,3 @@
-import json
 import time
 
 from tests.conftest import BOT_ID, FakeClient, dm_message, event, stream_message
@@ -75,38 +74,54 @@ def test_fetch_failure_does_not_raise(make_bot, monkeypatch):
     bot._on_event(event(stream_message(1, "https://arxiv.org/abs/2406.01234")))
     assert bot.client.sent == []
 
-
-def test_state_tracks_last_message_id(make_bot, tmp_path):
-    bot = make_bot()
-    bot._on_event(event(stream_message(41, "hello", stream="general")))
-    bot._on_event(event(stream_message(40, "older", stream="general")))
-    assert json.loads((tmp_path / "state.json").read_text())["last_message_id"] == 41
-
-
-def test_first_start_records_newest_and_does_not_catch_up(make_bot, fake_fetch, tmp_path):
+def test_first_start_remembers_links_without_answering(make_bot, fake_fetch):
     client = FakeClient()
     client.history = [stream_message(5, "https://arxiv.org/abs/2406.01234")]
     bot = make_bot(client=client)
+    assert bot.first_start
     bot._subscribe()
-    bot._catch_up()
+    bot.sweep(answer=False)
     assert client.subscribed == ["papers"]
     assert client.sent == [] and fake_fetch == []
-    assert json.loads((tmp_path / "state.json").read_text())["last_message_id"] == 5
+    bot.sweep()  # a later sweep must not answer the history it was born with either
+    assert client.sent == []
 
 
-def test_catch_up_answers_missed_links_once(make_bot, fake_fetch):
+def test_sweep_answers_only_links_no_card_follows(make_bot, fake_fetch):
     client = FakeClient()
     old = int(time.time()) - 3 * 24 * 3600
     client.history = [
-        stream_message(10, "https://arxiv.org/abs/1111.11111"),  # already handled (id <= last)
-        stream_message(11, "https://arxiv.org/abs/2406.01234"),  # missed, but Winston answered it before going down
-        stream_message(12, "**Paper**\n[arXiv:2406.01234](https://arxiv.org/abs/2406.01234)", sender=BOT_ID),
-        stream_message(13, "https://arxiv.org/abs/2222.22222", timestamp=old),  # too old
-        stream_message(14, "https://arxiv.org/abs/3333.33333"),  # missed, unanswered
-        stream_message(15, "https://arxiv.org/abs/4444.44444", stream="general"),  # not watched
+        stream_message(10, "https://arxiv.org/abs/1111.11111"),  # answered before going down
+        stream_message(11, "**Paper**\n[arXiv:1111.11111](https://arxiv.org/abs/1111.11111)", sender=BOT_ID),
+        stream_message(12, "https://arxiv.org/abs/2222.22222", timestamp=old),  # older than the window
+        stream_message(13, "https://arxiv.org/abs/3333.33333"),  # missed while asleep
+        stream_message(14, "https://arxiv.org/abs/4444.44444", stream="general"),  # not watched
     ]
-    bot = make_bot(client=client, state={"last_message_id": 10})
-    bot._catch_up()
+    bot = make_bot(client=client, state={"features": {}})
+    assert not bot.first_start
+    bot.sweep()
     assert fake_fetch == [["3333.33333"]]
     assert len(client.sent) == 1 and client.sent[0]["topic"] == "reading"
-    assert bot._state["last_message_id"] == 14
+    bot.sweep()
+    assert len(client.sent) == 1
+
+
+def test_sweep_answers_a_link_older_than_winstons_latest_message(make_bot, fake_fetch):
+    """The digest posts after a missed link; the link must still get its card."""
+    client = FakeClient()
+    client.history = [
+        stream_message(20, "https://arxiv.org/abs/5555.55555", topic="magnetars"),
+        stream_message(21, "arXiv:5555.55555 and others", sender=BOT_ID, topic="Daily Arxiv Highlights"),
+    ]
+    bot = make_bot(client=client, state={"features": {}})
+    bot.sweep()
+    assert fake_fetch == [["5555.55555"]]
+    assert client.sent[0]["topic"] == "magnetars"
+
+
+def test_sweep_does_not_answer_commands_again(make_bot, fake_fetch):
+    client = FakeClient()
+    client.history = [stream_message(30, "@**Winston** help", mentioned=True)]
+    bot = make_bot(client=client, state={"features": {}})
+    bot.sweep()
+    assert client.sent == []

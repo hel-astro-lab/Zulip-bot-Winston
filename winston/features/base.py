@@ -37,8 +37,8 @@ class Feature:
     def handle(self, msg: Message, bot: Winston) -> None:
         return None
 
-    def remember_own(self, msg: Message) -> None:
-        """Called during start-up catch-up with one of Winston's own recent messages."""
+    def remember(self, msg: Message) -> None:
+        """Treat whatever this message holds as already handled; used when re-reading history."""
         return None
 
     def run(self, bot: Winston) -> None:

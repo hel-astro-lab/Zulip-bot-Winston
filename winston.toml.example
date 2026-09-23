@@ -4,7 +4,8 @@
 timezone = "Europe/Helsinki"   # for scheduled features
 zuliprc = "zuliprc"            # bot credentials downloaded from Zulip (or set ZULIP_CONFIG instead)
 state_file = "state.json"      # last handled message id and last fire dates
-catch_up_hours = 24            # on start, handle messages missed while offline that are at most this old
+catch_up_hours = 24            # how far back a sweep looks for links posted while Winston was offline
+sweep_minutes = 5              # how often it re-reads the watched channels; it also sweeps on waking
 
 [features.arxiv]
 channels = ["papers"]          # channels where an arXiv link gets a paper card

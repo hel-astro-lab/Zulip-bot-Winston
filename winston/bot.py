@@ -21,7 +21,8 @@ from winston.features import FEATURES, Feature
 log = logging.getLogger(__name__)
 
 SCHEDULER_TICK_S = 30
-CATCH_UP_BATCH = 200
+SWEEP_BATCH = 200      # messages per channel a sweep looks at
+OWN_HISTORY = 100      # of Winston's own messages, to see what it has already answered
 
 
 @dataclass
@@ -72,12 +73,13 @@ class Config:
     zuliprc: str | None = None
     state_file: str = "state.json"
     catch_up_hours: float = 24
+    sweep_minutes: float = 5
     features: dict[str, dict[str, Any]] = field(default_factory=dict)
 
     @classmethod
     def load(cls, path: Path) -> Config:
         data = tomllib.loads(path.read_text())
-        unknown = set(data) - {"timezone", "zuliprc", "state_file", "catch_up_hours", "features"}
+        unknown = set(data) - {"timezone", "zuliprc", "state_file", "catch_up_hours", "sweep_minutes", "features"}
         if unknown:
             raise ValueError(f"{path}: unknown settings {sorted(unknown)}")
         return cls(path=path, **data)
@@ -123,9 +125,14 @@ class Winston:
     def watched_channels(self) -> list[str]:
         return sorted({channel for feature in self.features for channel in feature.watched_channels})
 
+    @property
+    def first_start(self) -> bool:
+        """True when Winston has no state yet, and so has never seen this Zulip before."""
+        return not self._state
+
     def start(self) -> None:
         self._subscribe()
-        self._catch_up()
+        self.sweep(answer=not self.first_start)
         threading.Thread(target=self._scheduler_loop, name="scheduler", daemon=True).start()
         log.info("%s is listening (features: %s)", self.name, ", ".join(f.name for f in self.features))
         self.client.call_on_each_event(self._on_event, event_types=["message"])
@@ -148,23 +155,27 @@ class Winston:
         except Exception:  # one bad event must never end the loop
             log.exception("failed to handle event %s", event.get("id"))
 
-    def dispatch(self, msg: Message) -> None:
+    def dispatch(self, msg: Message, watchers_only: bool = False) -> None:
+        """Offer a message to the features.
+
+        A sweep passes watchers_only, so that re-reading a channel answers links but never
+        answers a command a second time.
+        """
         if msg.sender_id == self.user_id:
             log.debug("skipping own message %s", msg.id)
-        else:
-            handled = False
-            for feature in self.features:
-                try:
-                    if feature.wants(msg):
-                        handled = True
-                        feature.handle(msg, self)
-                except Exception:
-                    log.exception("feature %s failed on message %s", feature.name, msg.id)
-            if not handled and msg.command is not None:
-                self.reply(msg, "That one went past me like a neutrino through lead. Try `help` and we shall try again.")
-        with self._lock:
-            self._state["last_message_id"] = max(self._state.get("last_message_id") or 0, msg.id)
-            self._save_state()
+            return
+        handled = False
+        for feature in self.features:
+            if watchers_only and msg.stream_name not in feature.watched_channels:
+                continue
+            try:
+                if feature.wants(msg):
+                    handled = True
+                    feature.handle(msg, self)
+            except Exception:
+                log.exception("feature %s failed on message %s", feature.name, msg.id)
+        if not handled and not watchers_only and msg.command is not None:
+            self.reply(msg, "That one went past me like a neutrino through lead. Try `help` and we shall try again.")
 
     # ----- sending -----------------------------------------------------------------------
 
@@ -184,40 +195,40 @@ class Winston:
         if result.get("result") != "success":
             log.error("send failed: %s (%s)", result.get("msg"), request)
 
-    # ----- catch-up after downtime -------------------------------------------------------
+    # ----- sweep: links posted while Winston was not listening ---------------------------
 
-    def _catch_up(self) -> None:
-        last_id = self._state.get("last_message_id")
-        if last_id is None:
-            newest = self._fetch(anchor="newest", num_before=1, num_after=0, narrow=[])
-            with self._lock:
-                self._state["last_message_id"] = newest[-1]["id"] if newest else 0
-                self._save_state()
-            log.info("first start, no catch-up")
-            return
+    def sweep(self, answer: bool = True) -> None:
+        """Answer arXiv links in the watched channels that no card of Winston's follows yet.
+
+        Zulip drops an idle event queue after about ten minutes, so a message posted while the
+        laptop sleeps is never delivered. Re-reading the recent history covers that gap: what
+        Winston has already answered it recognises from its own posts, and anything older than
+        catch_up_hours is left alone. With answer=False the links are only remembered, which is
+        what the first start does so that Winston never replies to a whole channel history.
+        """
         since = time.time() - self.config.catch_up_hours * 3600
         for channel in self.watched_channels:
-            own = self._fetch(
+            stream = {"operator": "stream", "operand": channel}
+            mine = self._fetch(
                 anchor="newest",
-                num_before=100,
+                num_before=OWN_HISTORY,
                 num_after=0,
-                narrow=[{"operator": "stream", "operand": channel}, {"operator": "sender", "operand": self.email}],
+                narrow=[stream, {"operator": "sender", "operand": self.email}],
             )
-            for m in own:
-                if m["timestamp"] >= since:
-                    msg = Message.from_zulip(m, m.get("flags", []), self._mention_re)
-                    for feature in self.features:
-                        feature.remember_own(msg)
-            missed = self._fetch(
-                anchor=last_id or "oldest",
-                num_before=0,
-                num_after=CATCH_UP_BATCH,
-                narrow=[{"operator": "stream", "operand": channel}],
-            )
-            for m in missed:
-                if m["id"] > last_id and m["timestamp"] >= since:
-                    log.info("catch-up: message %s in #%s", m["id"], channel)
-                    self.dispatch(Message.from_zulip(m, m.get("flags", []), self._mention_re))
+            for m in mine:
+                self._remember(m)
+            for m in self._fetch(anchor="newest", num_before=SWEEP_BATCH, num_after=0, narrow=[stream]):
+                if m["timestamp"] < since or m["sender_id"] == self.user_id:
+                    continue
+                if answer:
+                    self.dispatch(Message.from_zulip(m, m.get("flags", []), self._mention_re), watchers_only=True)
+                else:
+                    self._remember(m)
+
+    def _remember(self, m: dict[str, Any]) -> None:
+        msg = Message.from_zulip(m, m.get("flags", []), self._mention_re)
+        for feature in self.features:
+            feature.remember(msg)
 
     def _fetch(self, **request: Any) -> list[dict[str, Any]]:
         result = self.client.get_messages({**request, "apply_markdown": False})
@@ -229,9 +240,13 @@ class Winston:
     # ----- scheduled features ------------------------------------------------------------
 
     def _scheduler_loop(self) -> None:
+        next_sweep = time.time() + self.config.sweep_minutes * 60
         while True:
             try:
                 self.run_due_features()
+                if time.time() >= next_sweep:  # wall clock, so a laptop wake sweeps at once
+                    next_sweep = time.time() + self.config.sweep_minutes * 60
+                    self.sweep()
             except Exception:
                 log.exception("scheduler tick failed")
             time.sleep(SCHEDULER_TICK_S)
