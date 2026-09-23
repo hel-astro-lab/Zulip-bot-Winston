@@ -1,10 +1,30 @@
 import datetime as dt
+import json
 import time
+from pathlib import Path
 
 import pytest
 
 from winston import arxiv
 from winston.bot import Config, Winston
+from winston.features import menu
+
+UNICAFE = json.loads((Path(__file__).parent / "fixtures" / "unicafe.json").read_text(encoding="utf-8"))
+MENU_POST = """\
+**Lunch at Kumpula, Wednesday 23 September**
+- [Chemicum Teachers restaurant](https://unicafe.fi/en/restaurants/chemicum-teachers-restaurant/):
+    - Miso-Mushroom Ratatouille 🌱
+    - Chicken lasagna with mascarpone
+    - Haudutettua punakaalia 🌱
+- [Chemicum](https://unicafe.fi/en/restaurants/chemicum/):
+    - Miso-Mushroom Ratatouille 🌱
+    - Beatrootballs, wasabi-sauce 🌱
+    - Chicken lasagna with mascarpone
+- [Exactum](https://unicafe.fi/en/restaurants/exactum/):
+    - Kasviskepukoita & raikasta maissisalsaa 🌱
+    - Chili con Unlimited Jauhis 🌱
+    - Kreikkalainen tomaattikeitto 🌱
+    - Meksikolaista broileria ja maissisalsaa"""
 
 BOT_ID = 99
 BOT_EMAIL = "winston-bot@example.com"
@@ -100,6 +120,18 @@ def fake_fetch(monkeypatch):
 
     monkeypatch.setattr(arxiv, "fetch_papers", fetch)
     return calls
+
+
+@pytest.fixture
+def fake_unicafe(monkeypatch):
+    """Serve the Unicafe fixture instead of the API, with today Wed 23.9.2026; returns a setter for today."""
+    monkeypatch.setattr(menu, "fetch_restaurants", lambda lang: UNICAFE)
+
+    def set_day(day):
+        monkeypatch.setattr(menu, "today", lambda tz: day)
+
+    set_day(dt.date(2026, 9, 23))
+    return set_day
 
 
 @pytest.fixture

@@ -13,11 +13,13 @@ channels = ["papers"]          # channels where an arXiv link gets a paper card
 [features.help]
 
 [features.menu]
-enabled = false                # placeholder until the menu fetcher exists
-at = "11:15"
-channel = "general"
-topic = "lunch"
+at = "11:20"                   # weekdays only; nothing is posted on Saturday and Sunday
+channel = "random"
+topic = "Lunch"
 grace_minutes = 120            # still post if Winston wakes up this late
+restaurants = ["Chemicum Teachers restaurant", "Chemicum", "Exactum"]   # Unicafe titles, in posting order
+campus = "Kumpula"             # shown in the first line of the post
+lang = "en"                    # "en" or "fi"; restaurant titles follow the language
 
 [features.digest]
 at = "08:00"                   # arXiv announces at 00:00 New York time on weekdays

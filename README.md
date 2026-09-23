@@ -14,6 +14,10 @@ Every weekday morning Winston reads the new astro-ph listing, keeps the papers w
 
 `authors.txt` lists one name per line, surname first: `Nättilä, Joonas`, `Nättilä, J.`, or `Nättilä`. A bare surname matches any first name. Winston re-reads the file on every run, so editing it needs no restart. `@Winston digest` runs the digest at any time.
 
+## Lunch menu
+
+Every weekday Winston posts the main dishes of the Kumpula Unicafé restaurants in `#random > Lunch`. The menu comes from the JSON feed behind unicafe.fi. `@Winston menu` shows today's menu anywhere.
+
 # Setup
 
 ## Zulip

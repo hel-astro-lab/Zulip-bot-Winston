@@ -1,0 +1,366 @@
+[
+ {
+  "id": 2591,
+  "title": "Physicum",
+  "permalink": "https://unicafe.fi/en/restaurants/physicum/",
+  "location": [
+   {
+    "id": 272,
+    "name": "Kumpula"
+   }
+  ],
+  "menuData": {
+   "menus": [
+    {
+     "date": "Wed 23.09.",
+     "message": null,
+     "data": []
+    },
+    {
+     "date": "Sat 26.09.",
+     "message": null,
+     "data": []
+    }
+   ]
+  }
+ },
+ {
+  "id": 2510,
+  "title": "Olivia",
+  "permalink": "https://unicafe.fi/en/restaurants/olivia/",
+  "location": [
+   {
+    "id": 270,
+    "name": "City Centre"
+   }
+  ],
+  "menuData": {
+   "menus": [
+    {
+     "date": "Wed 23.09.",
+     "message": null,
+     "data": [
+      {
+       "name": "Vegetablepatties & roasted garlic-sesame dip",
+       "meta": {
+        "0": [
+         "G",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Vegaanilounas"
+       }
+      },
+      {
+       "name": "Coconut tofu korma",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Vegaanilounas"
+       }
+      },
+      {
+       "name": "Chicken and pasta casserole",
+       "meta": {
+        "0": [
+         "KELA",
+         "L",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Lounas"
+       }
+      },
+      {
+       "name": "Mango kiss vegan",
+       "meta": {
+        "0": [
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Jälkiruoka"
+       }
+      }
+     ]
+    },
+    {
+     "date": "Sat 26.09.",
+     "message": null,
+     "data": []
+    }
+   ]
+  }
+ },
+ {
+  "id": 2500,
+  "title": "Exactum",
+  "permalink": "https://unicafe.fi/en/restaurants/exactum/",
+  "location": [
+   {
+    "id": 272,
+    "name": "Kumpula"
+   }
+  ],
+  "menuData": {
+   "menus": [
+    {
+     "date": "Wed 23.09.",
+     "message": null,
+     "data": [
+      {
+       "name": "Kasviskepukoita & raikasta maissisalsaa",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Vegaanilounas"
+       }
+      },
+      {
+       "name": "Chili con Unlimited Jauhis",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Vegaanilounas"
+       }
+      },
+      {
+       "name": "Kreikkalainen tomaattikeitto",
+       "meta": {
+        "0": [
+         "G",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Vegaanilounas"
+       }
+      },
+      {
+       "name": "Meksikolaista broileria ja maissisalsaa",
+       "meta": {
+        "0": [
+         "G",
+         "L",
+         "M"
+        ]
+       },
+       "price": {
+        "name": "Lounas"
+       }
+      },
+      {
+       "name": "Keitetty peruna",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg"
+        ]
+       },
+       "price": {
+        "name": "Lisäke"
+       }
+      },
+      {
+       "name": "Gluteenitonta kauraa",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg"
+        ]
+       },
+       "price": {
+        "name": "Lisäke"
+       }
+      }
+     ]
+    },
+    {
+     "date": "Sat 26.09.",
+     "message": null,
+     "data": []
+    }
+   ]
+  }
+ },
+ {
+  "id": 2499,
+  "title": "Chemicum Teachers restaurant",
+  "permalink": "https://unicafe.fi/en/restaurants/chemicum-teachers-restaurant/",
+  "location": [
+   {
+    "id": 272,
+    "name": "Kumpula"
+   }
+  ],
+  "menuData": {
+   "menus": [
+    {
+     "date": "Wed 23.09.",
+     "message": null,
+     "data": [
+      {
+       "name": "Miso-Mushroom Ratatouille",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Buffet"
+       }
+      },
+      {
+       "name": "Chicken lasagna with mascarpone",
+       "meta": {
+        "0": [
+         "KELA"
+        ]
+       },
+       "price": {
+        "name": "Buffet"
+       }
+      },
+      {
+       "name": " Haudutettua punakaalia",
+       "meta": {
+        "0": [
+         "G",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Buffet"
+       }
+      }
+     ]
+    },
+    {
+     "date": "Sat 26.09.",
+     "message": null,
+     "data": []
+    }
+   ]
+  }
+ },
+ {
+  "id": 2498,
+  "title": "Chemicum",
+  "permalink": "https://unicafe.fi/en/restaurants/chemicum/",
+  "location": [
+   {
+    "id": 272,
+    "name": "Kumpula"
+   }
+  ],
+  "menuData": {
+   "menus": [
+    {
+     "date": "Wed 23.09.",
+     "message": null,
+     "data": [
+      {
+       "name": "Miso-Mushroom Ratatouille",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Vegaanilounas"
+       }
+      },
+      {
+       "name": "Beatrootballs, wasabi-sauce",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Vegaanilounas"
+       }
+      },
+      {
+       "name": "Chicken lasagna with mascarpone",
+       "meta": {
+        "0": [
+         "KELA"
+        ]
+       },
+       "price": {
+        "name": "Lounas"
+       }
+      },
+      {
+       "name": "Whole grain rice",
+       "meta": {
+        "0": [
+         "G",
+         "KELA",
+         "Veg"
+        ]
+       },
+       "price": {
+        "name": "Lisäke"
+       }
+      },
+      {
+       "name": "Berry dessert",
+       "meta": {
+        "0": [
+         "G",
+         "L",
+         "Ilmastovalinta"
+        ]
+       },
+       "price": {
+        "name": "Jälkiruoka"
+       }
+      }
+     ]
+    },
+    {
+     "date": "Sat 26.09.",
+     "message": null,
+     "data": []
+    }
+   ]
+  }
+ }
+]
