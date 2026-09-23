@@ -1,5 +1,8 @@
 import datetime as dt
+import re
 from pathlib import Path
+
+import pytest
 
 from winston import arxiv
 
@@ -67,3 +70,29 @@ def test_format_paper_truncates_long_author_lists():
 def test_format_paper_short_author_list():
     paper = arxiv.Paper("1.1", "T", ("X", "Y"), "abs", "cs.LG", dt.date(2024, 1, 1))
     assert "\nX, Y\n" in arxiv.format_paper(paper)
+
+
+@pytest.mark.parametrize(
+    "text, expected",
+    [
+        (r"$x$", r"$$x$$"),
+        (r"regret $\widetilde{O}(\sqrt{T})$ for $S \times A$", r"regret $$\widetilde{O}(\sqrt{T})$$ for $$S \times A$$"),
+        (r"already $$x^2$$ here", r"already $$x^2$$ here"),
+        (r"$$\alpha$$ and $\beta$", r"$$\alpha$$ and $$\beta$$"),
+        (r"a literal \$5 charge", r"a literal \$5 charge"),
+        (r"one lone $ sign", r"one lone $ sign"),
+        (r"PSR~J0740+6620 at 10~kpc", "PSR J0740+6620 at 10 kpc"),
+        (r"Erd\~os keeps its accent", r"Erd\~os keeps its accent"),
+    ],
+)
+def test_zulip_math(text, expected):
+    assert arxiv.zulip_math(text) == expected
+
+
+def test_format_paper_doubles_the_dollars_of_a_real_abstract():
+    paper = arxiv.parse_feed(FIXTURE.read_text())[0]
+    card = arxiv.format_paper(paper)
+    assert "$$\\widetilde{\\mathrm{O}}(\\sqrt{\\mathrm{sp}(h^*) S A T})$$" in card
+    assert "$$h^*$$" in card
+    assert re.search(r"(?<!\$)\$(?!\$)", card) is None  # no single-dollar math left anywhere
+

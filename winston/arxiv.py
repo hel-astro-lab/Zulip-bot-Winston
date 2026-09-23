@@ -69,6 +69,25 @@ def _clean(text: str | None) -> str:
     return " ".join((text or "").split())
 
 
+# An escaped dollar and existing display math are left alone; a single-dollar span is doubled.
+_MATH = re.compile(r"\\\$|\$\$.+?\$\$|\$(?!\$)(?:\\.|[^$\\])+\$", re.S)
+_TEX_SPACE = re.compile(r"(?<!\\)~")
+
+
+def zulip_math(text: str) -> str:
+    """TeX as Zulip renders it: Zulip shows inline math only between double dollars, so $x$ becomes $$x$$.
+
+    Text already in $$...$$ stays as it is, an escaped \\$ stays a plain dollar sign, and a lone $
+    without a partner is left alone. TeX's ~ becomes an ordinary space.
+    """
+
+    def double(match: re.Match[str]) -> str:
+        span = match.group(0)
+        return span if span.startswith(("\\$", "$$")) else f"${span}$"
+
+    return re.sub(r"  +", " ", _TEX_SPACE.sub(" ", _MATH.sub(double, text)))
+
+
 def parse_feed(xml_text: str) -> list[Paper]:
     """Papers in an arXiv API Atom feed. Error entries (malformed IDs) are logged and skipped."""
     root = ET.fromstring(xml_text)
@@ -127,10 +146,10 @@ def format_paper(paper: Paper) -> str:
     else:
         authors = ", ".join(paper.authors)
     return (
-        f"**{paper.title}**\n"
+        f"**{zulip_math(paper.title)}**\n"
         f"[arXiv:{paper.id}]({paper.abs_url}) · {paper.primary_category} · {paper.published.isoformat()}\n"
         f"{authors}\n"
-        f"```spoiler Abstract\n{paper.abstract}\n```"
+        f"```spoiler Abstract\n{zulip_math(paper.abstract)}\n```"
     )
 
 

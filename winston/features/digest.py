@@ -205,4 +205,4 @@ class Digest(Feature):
             extra = [s for s, hit in zip(shown[3:], matched[3:]) if hit]
             shown = shown[:3] + (["…"] + extra if extra else []) + ["et al."]
         first_hit = next((name_key(n).surname for n, hit in zip(names, matched) if hit), "")  # type: ignore[union-attr]
-        return first_hit, f'- {", ".join(shown)}: "{entry.title}" {entry.abs_url}'
+        return first_hit, f'- {", ".join(shown)}: "{arxiv.zulip_math(entry.title)}" {entry.abs_url}'

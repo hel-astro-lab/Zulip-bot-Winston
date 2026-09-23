@@ -206,3 +206,18 @@ def test_digest_with_empty_author_list_posts_nothing(make_bot, monkeypatch, tmp_
     bot = make_bot(digest=DIGEST)
     digest = next(f for f in bot.features if f.name == "digest")
     assert digest.post_digest(bot) == 0 and bot.client.sent == []
+
+
+def test_digest_line_converts_math_in_the_title(digest_bot):
+    digest = next(f for f in digest_bot.features if f.name == "digest")
+    entry = arxiv.Listing(
+        id="2609.00001",
+        title=r"Reconnection at $\beta \sim 1$ in PSR~J0740+6620",
+        authors=("W. N. Brandt",),
+        announce_type="new",
+        categories=("astro-ph.HE",),
+        abstract="",
+    )
+    _, line = digest._line(entry, ("W. N. Brandt",), AuthorList.parse("Brandt\n"))
+    assert '"Reconnection at $$\\beta \\sim 1$$ in PSR J0740+6620"' in line
+
