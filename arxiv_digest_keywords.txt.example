@@ -1,0 +1,12 @@
+# Keywords Winston looks for in the titles and abstracts of the daily arXiv listing, one per line.
+# Case is ignored and a plural ending is allowed: pulsar matches Pulsars, FRB matches FRBs.
+# The words of a phrase may be separated by spaces or hyphens. '#' starts a comment.
+
+pulsar
+magnetar
+FRB
+fast radio burst
+turbulence
+turbulent
+MHD
+magnetohydrodynamic

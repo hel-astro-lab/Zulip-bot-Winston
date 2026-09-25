@@ -18,7 +18,8 @@ install_example() {   # install_example <example file> <destination name>
 }
 
 install_example winston.toml.example winston.toml
-install_example authors.txt.example authors.txt
+install_example arxiv_digest_authors.txt.example arxiv_digest_authors.txt
+install_example arxiv_digest_keywords.txt.example arxiv_digest_keywords.txt
 install_example secrets.txt.example secrets.txt
 
 echo
@@ -29,4 +30,4 @@ else
     echo "missing  $target/zuliprc  <- download it from Zulip (Personal settings > Bots) and put it there"
 fi
 echo
-echo "Next: edit $target/authors.txt, then run  $here/.venv/bin/winston run-feature digest"
+echo "Next: edit $target/arxiv_digest_authors.txt and arxiv_digest_keywords.txt, then run  $here/.venv/bin/winston run-feature digest"

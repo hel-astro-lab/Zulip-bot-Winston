@@ -6,7 +6,7 @@ import pytest
 
 from tests.conftest import dm_message, event
 from winston import arxiv
-from winston.features.digest import AuthorList, NameKey, abbreviate, name_key, normalize, tex_to_text
+from winston.features.digest import AuthorList, KeywordList, NameKey, abbreviate, name_key, normalize, tex_to_text
 
 FIXTURE = Path(__file__).parent / "fixtures" / "astro-ph.rss"
 
@@ -92,6 +92,16 @@ def test_author_list_matching():
     assert kunz.matches("Martin Kunz") is None and kunz.matches("M. Kunz") and kunz.matches("Matthew W. Kunz")
 
 
+def test_keyword_list_matching():
+    keywords = KeywordList.parse("# topics\npulsar\nFRB  # bursts\nfast radio burst\nradio\n\n")
+    assert [text for text, _ in keywords.entries] == ["pulsar", "FRB", "fast radio burst", "radio"]
+    assert keywords.matches("Two Pulsars in a binary") == ["pulsar"]
+    assert keywords.matches("repeating FRBs") == ["FRB"]
+    assert keywords.matches("Fast-Radio-Bursts from magnetars") == ["fast radio burst", "radio"]
+    assert keywords.matches("fast\nradio burst") == ["fast radio burst", "radio"]
+    assert keywords.matches("a radiometer near a millisecond pulsarlike source") == []
+
+
 @pytest.mark.parametrize(
     "name, short",
     [
@@ -116,7 +126,6 @@ DIGEST = {
     "channel": "papers-test",
     "topic": "Winston's Daily Arxiv Highlights",
     "categories": ["astro-ph"],
-    "authors": "authors.txt",
 }
 
 CLEAN_NAMES = {
@@ -128,7 +137,7 @@ CLEAN_NAMES = {
 
 @pytest.fixture
 def digest_bot(make_bot, monkeypatch, tmp_path):
-    (tmp_path / "authors.txt").write_text("Nättilä\nIvezić, Ž.\nDaniel López-Cano\nBrandt\nde la Cruz Rodríguez\n", encoding="utf-8")
+    (tmp_path / "arxiv_digest_authors.txt").write_text("Nättilä\nIvezić, Ž.\nDaniel López-Cano\nBrandt\nde la Cruz Rodríguez\n", encoding="utf-8")
     monkeypatch.setattr(arxiv, "fetch_listing", lambda category: arxiv.parse_listing(FIXTURE.read_text()))
 
     def fake_fetch_papers(ids):
@@ -150,7 +159,7 @@ def test_digest_posts_once_with_expected_lines(digest_bot, tmp_path):
     post = bot.client.sent[0]
     assert post["to"] == "papers-test" and post["topic"] == "Winston's Daily Arxiv Highlights"
     lines = post["content"].split("\n")
-    assert lines[0] == "**arXiv astro-ph, Friday 18 September 2026** — 3 papers by people on the list"
+    assert lines[0] == "**arXiv astro-ph, Friday 18 September 2026** — 3 papers"
     assert lines[1] == (
         '- S. Wang, F. Zou, E. Gallo, …, **W. N. Brandt**, et al.: "Chandra Lensing-cluster Ultradeep Extragalactic '
         'Survey (CLUES) I: A 2 Ms Point-Source Catalog of the Abell 2744 Field" https://arxiv.org/abs/2609.17673'
@@ -160,6 +169,7 @@ def test_digest_posts_once_with_expected_lines(digest_bot, tmp_path):
         "https://arxiv.org/abs/2609.19246"
     )
     assert lines[3].startswith('- V. R. Soares da Silva, **D. López-Cano**, L. R. Abramo, J. Chaves-Montero, F. Maion: "Where the Forest')
+    assert len(lines) == 4
     # the replaced paper by de la Cruz Rodríguez is not flagged
     assert "2406.17234" not in post["content"]
 
@@ -167,6 +177,19 @@ def test_digest_posts_once_with_expected_lines(digest_bot, tmp_path):
     assert len(bot.client.sent) == 1
     state = json.loads((tmp_path / "state.json").read_text())
     assert sorted(state["features"]["digest"]["posted"]) == ["2609.17673", "2609.19187", "2609.19235", "2609.19246"]
+
+
+def test_digest_keyword_hits_follow_author_hits(digest_bot, tmp_path):
+    (tmp_path / "arxiv_digest_keywords.txt").write_text("dynamo\nVirgo cluster\n", encoding="utf-8")
+    digest = next(f for f in digest_bot.features if f.name == "digest")
+    assert digest.post_digest(digest_bot) == 4
+    lines = digest_bot.client.sent[0]["content"].split("\n")
+    assert lines[0].endswith("— 4 papers")
+    assert lines[2].endswith("https://arxiv.org/abs/2609.19246 — _Virgo cluster_")  # author hit, keyword shown too
+    assert lines[4] == (
+        "- S. Verma, K. Seshasayanan: \"Effects of radial conductivity variation on the Ponomarenko dynamo\" "
+        "https://arxiv.org/abs/2609.19187 — _dynamo_"
+    )
 
 
 def test_digest_falls_back_to_feed_names(digest_bot, monkeypatch):
@@ -191,7 +214,7 @@ def test_digest_command_replies_with_count(digest_bot):
 
 
 def test_digest_header_template(make_bot, monkeypatch, tmp_path):
-    (tmp_path / "authors.txt").write_text("Brandt\n")
+    (tmp_path / "arxiv_digest_authors.txt").write_text("Brandt\n")
     monkeypatch.setattr(arxiv, "fetch_listing", lambda category: arxiv.parse_listing(FIXTURE.read_text()))
     monkeypatch.setattr(arxiv, "fetch_papers", lambda ids: [])
     bot = make_bot(digest={**DIGEST, "header": "{papers} on {date} ({categories}, n={n})"})
@@ -201,7 +224,7 @@ def test_digest_header_template(make_bot, monkeypatch, tmp_path):
 
 
 def test_digest_with_empty_author_list_posts_nothing(make_bot, monkeypatch, tmp_path):
-    (tmp_path / "authors.txt").write_text("# nobody yet\n")
+    (tmp_path / "arxiv_digest_authors.txt").write_text("# nobody yet\n")
     monkeypatch.setattr(arxiv, "fetch_listing", lambda category: arxiv.parse_listing(FIXTURE.read_text()))
     bot = make_bot(digest=DIGEST)
     digest = next(f for f in bot.features if f.name == "digest")
@@ -218,6 +241,6 @@ def test_digest_line_converts_math_in_the_title(digest_bot):
         categories=("astro-ph.HE",),
         abstract="",
     )
-    _, line = digest._line(entry, ("W. N. Brandt",), AuthorList.parse("Brandt\n"))
+    _, line = digest._line(entry, ("W. N. Brandt",), AuthorList.parse("Brandt\n"), [])
     assert '"Reconnection at $$\\beta \\sim 1$$ in PSR J0740+6620"' in line
 

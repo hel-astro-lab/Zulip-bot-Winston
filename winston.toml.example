@@ -27,7 +27,8 @@ channel = "papers"
 topic = "Daily Arxiv Highlights"
 categories = ["astro-ph"]      # any arXiv category or archive, e.g. "astro-ph.HE"
 announce_types = ["new", "cross"]   # add "replace" to also flag new versions of old papers
-authors = "authors.txt"        # names to watch for, one per line, relative to this file
+authors = "arxiv_digest_authors.txt"     # names to watch for, one per line, relative to this file
+keywords = "arxiv_digest_keywords.txt"   # words and phrases to look for in titles and abstracts
 max_listed_authors = 6         # longer author lists are shortened to the first three plus the matches
 # First line of the post; placeholders: {categories}, {date}, {n}, {papers} ("3 papers")
 header = "**arXiv {categories}, {date}**"

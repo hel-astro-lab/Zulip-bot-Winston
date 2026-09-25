@@ -10,9 +10,9 @@ When someone posts an arXiv link in `#papers`, Winston replies in the same topic
 
 ## Daily arXiv digest
 
-Every weekday morning Winston reads the new astro-ph listing, keeps the papers with an author from `authors.txt`, and posts one message in `#papers`. Nothing is posted on days without a hit.
+Every weekday morning Winston reads the new astro-ph listing, keeps the papers with an author from `arxiv_digest_authors.txt` or a keyword from `arxiv_digest_keywords.txt` in the title or abstract, and posts one message in `#papers`. Nothing is posted on days without a hit.
 
-`authors.txt` lists one name per line, surname first: `Nättilä, Joonas`, `Nättilä, J.`, or `Nättilä`. A bare surname matches any first name. Winston re-reads the file on every run, so editing it needs no restart. `@Winston digest` runs the digest at any time.
+`arxiv_digest_authors.txt` lists one name per line, surname first: `Nättilä, Joonas`, `Nättilä, J.`, or `Nättilä`. A bare surname matches any first name. `arxiv_digest_keywords.txt` lists one word or phrase per line; case is ignored, plurals match (`pulsar` finds `pulsars`), and the words of a phrase may be joined by spaces or hyphens. Papers found by author come first, those found only by keyword after, each with its keywords in italics. Winston re-reads both files on every run, so editing it needs no restart. `@Winston digest` runs the digest at any time.
 
 ## Lunch menu
 
@@ -31,11 +31,11 @@ python3 -m venv .venv
 .venv/bin/pip install -e '.[dev]'
 .venv/bin/pytest
 
-./setup.sh # automated install script that copies winston.toml and authors.txt to ~/.config/winston
+./setup.sh # automated install script that copies winston.toml and the digest lists to ~/.config/winston
 mv ~/Downloads/zuliprc ~/.config/winston/zuliprc && chmod 600 ~/.config/winston/zuliprc
 ```
 
-Edit `~/.config/winston/winston.toml` (channels, time zone, digest time) and `authors.txt`. Then:
+Edit `~/.config/winston/winston.toml` (channels, time zone, digest time) and the two `arxiv_digest_*.txt` lists. Then:
 
 ```sh
 .venv/bin/winston check 2406.01234        # print a paper card, no Zulip needed

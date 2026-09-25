@@ -5,5 +5,5 @@ __pycache__/
 winston.toml
 zuliprc
 state.json
-authors.txt
+arxiv_digest_*.txt
 secrets.txt

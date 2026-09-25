@@ -1,4 +1,4 @@
-"""Daily arXiv digest: the day's listings filtered by the group's author list."""
+"""Daily arXiv digest: the day's listings filtered by the group's author and keyword lists."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from winston.features.base import Feature
 log = logging.getLogger(__name__)
 
 POSTED_LIMIT = 2000
-DEFAULT_HEADER = "**arXiv {categories}, {date}** — {papers} by people on the list"
+DEFAULT_HEADER = "**arXiv {categories}, {date}** — {papers}"
 
 # TeX letter commands that stand for a letter; accent commands (\v \c \u \H ...) map to nothing.
 _TEX_LETTERS = {"ss": "ss", "ae": "ae", "oe": "oe", "aa": "a", "o": "o", "l": "l", "i": "i", "j": "j",
@@ -112,6 +112,39 @@ class AuthorList:
         return None
 
 
+class KeywordList:
+    """Keywords and phrases to look for in titles and abstracts, one per line, ``#`` comments allowed.
+
+    Matching ignores case, needs a word boundary on both sides, allows a plural ``s``/``es``
+    ending, and lets the words of a phrase be separated by spaces or hyphens: "fast radio burst"
+    matches "Fast-Radio-Bursts", "pulsar" matches "pulsars" but "radio" not "radiometer".
+    """
+
+    def __init__(self, entries: list[tuple[str, re.Pattern[str]]]):
+        self.entries = entries
+
+    @classmethod
+    def parse(cls, text: str) -> KeywordList:
+        entries = []
+        for line in text.splitlines():
+            words = line.split("#", 1)[0].split()
+            if words:
+                pattern = r"\b" + r"[\s-]+".join(map(re.escape, words)) + r"(?:s|es)?\b"
+                entries.append((" ".join(words), re.compile(pattern, re.IGNORECASE)))
+        return cls(entries)
+
+    @classmethod
+    def load(cls, path: Path) -> KeywordList:
+        if not path.exists():
+            log.warning("keyword file %s does not exist", path)
+            return cls([])
+        return cls.parse(path.read_text(encoding="utf-8"))
+
+    def matches(self, text: str) -> list[str]:
+        """The entries found in the text, in list order."""
+        return [keyword for keyword, pattern in self.entries if pattern.search(text)]
+
+
 def given_names_match(entry: tuple[str, ...], author: tuple[str, ...]) -> bool:
     if not entry:
         return True
@@ -152,9 +185,10 @@ class Digest(Feature):
 
     def post_digest(self, bot) -> int:
         """Fetch the listings, post the flagged papers, remember what was seen. Returns papers posted."""
-        authors = AuthorList.load(bot.config.resolve(self.settings.get("authors", "authors.txt")))
-        if not authors.entries:
-            log.warning("author list is empty; nothing can be flagged")
+        authors = AuthorList.load(bot.config.resolve(self.settings.get("authors", "arxiv_digest_authors.txt")))
+        keywords = KeywordList.load(bot.config.resolve(self.settings.get("keywords", "arxiv_digest_keywords.txt")))
+        if not authors.entries and not keywords.entries:
+            log.warning("author and keyword lists are empty; nothing can be flagged")
         state = bot.feature_state(self.name)
         posted: list[str] = state.setdefault("posted", [])
 
@@ -166,13 +200,18 @@ class Digest(Feature):
             for entry in entries:
                 listings.setdefault(entry.id, entry)
         fresh = [e for e in listings.values() if e.announce_type in self.announce_types and e.id not in posted]
-        hits = [e for e in fresh if any(authors.matches(a) for a in e.authors)]
-        log.info("digest %s: %d entries, %d fresh, %d flagged", day, len(listings), len(fresh), len(hits))
+        topics = {e.id: keywords.matches(f"{e.title} {e.abstract}") for e in fresh}
+        by_author = {e.id for e in fresh if any(authors.matches(a) for a in e.authors)}
+        hits = [e for e in fresh if e.id in by_author or topics[e.id]]
+        log.info("digest %s: %d entries, %d fresh, %d flagged (%d by author)", day, len(listings), len(fresh), len(hits), len(by_author))
 
         if hits:
             names_by_id = self._clean_names(hits)
-            lines = [self._line(e, names_by_id.get(e.id) or tuple(tex_to_text(a) for a in e.authors), authors) for e in hits]
-            lines.sort(key=lambda pair: pair[0])
+            lines = [
+                self._line(e, names_by_id.get(e.id) or tuple(tex_to_text(a) for a in e.authors), authors, topics[e.id])
+                for e in hits
+            ]
+            lines.sort(key=lambda pair: pair[0])  # stable: keyword-only hits keep the listing order
             n = len(hits)
             header = self.settings.get("header", DEFAULT_HEADER).format(
                 categories=", ".join(self.categories),
@@ -196,13 +235,15 @@ class Digest(Feature):
             log.warning("arXiv API unavailable, using feed author names", exc_info=True)
             return {}
 
-    def _line(self, entry: arxiv.Listing, names: tuple[str, ...], authors: AuthorList) -> tuple[str, str]:
-        """(sort key, Markdown line) for one flagged paper."""
+    def _line(self, entry: arxiv.Listing, names: tuple[str, ...], authors: AuthorList, topics: list[str]) -> tuple[tuple[int, str], str]:
+        """(sort key, Markdown line) for one flagged paper: author hits first by surname, then keyword hits."""
         matched = [authors.matches(n) is not None for n in names]
         shown = [f"**{abbreviate(n)}**" if hit else abbreviate(n) for n, hit in zip(names, matched)]
         limit = int(self.settings.get("max_listed_authors", 6))
         if len(shown) > limit:
             extra = [s for s, hit in zip(shown[3:], matched[3:]) if hit]
             shown = shown[:3] + (["…"] + extra if extra else []) + ["et al."]
-        first_hit = next((name_key(n).surname for n, hit in zip(names, matched) if hit), "")  # type: ignore[union-attr]
-        return first_hit, f'- {", ".join(shown)}: "{arxiv.zulip_math(entry.title)}" {entry.abs_url}'
+        first_hit = next((name_key(n).surname for n, hit in zip(names, matched) if hit), None)  # type: ignore[union-attr]
+        suffix = f" — _{', '.join(topics)}_" if topics else ""
+        line = f'- {", ".join(shown)}: "{arxiv.zulip_math(entry.title)}" {entry.abs_url}{suffix}'
+        return (0, first_hit) if first_hit is not None else (1, ""), line
