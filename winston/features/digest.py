@@ -244,6 +244,6 @@ class Digest(Feature):
             extra = [s for s, hit in zip(shown[3:], matched[3:]) if hit]
             shown = shown[:3] + (["…"] + extra if extra else []) + ["et al."]
         first_hit = next((name_key(n).surname for n, hit in zip(names, matched) if hit), None)  # type: ignore[union-attr]
-        suffix = f" — _{', '.join(topics)}_" if topics else ""
+        suffix = f" ({', '.join(topics)})" if topics else ""
         line = f'- {", ".join(shown)}: "{arxiv.zulip_math(entry.title)}" {entry.abs_url}{suffix}'
         return (0, first_hit) if first_hit is not None else (1, ""), line

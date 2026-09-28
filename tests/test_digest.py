@@ -185,10 +185,10 @@ def test_digest_keyword_hits_follow_author_hits(digest_bot, tmp_path):
     assert digest.post_digest(digest_bot) == 4
     lines = digest_bot.client.sent[0]["content"].split("\n")
     assert lines[0].endswith("— 4 papers")
-    assert lines[2].endswith("https://arxiv.org/abs/2609.19246 — _Virgo cluster_")  # author hit, keyword shown too
+    assert lines[2].endswith("https://arxiv.org/abs/2609.19246 (Virgo cluster)")  # author hit, keyword shown too
     assert lines[4] == (
         "- S. Verma, K. Seshasayanan: \"Effects of radial conductivity variation on the Ponomarenko dynamo\" "
-        "https://arxiv.org/abs/2609.19187 — _dynamo_"
+        "https://arxiv.org/abs/2609.19187 (dynamo)"
     )
 
 
