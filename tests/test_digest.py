@@ -6,7 +6,7 @@ import pytest
 
 from tests.conftest import dm_message, event
 from winston import arxiv
-from winston.features.digest import AuthorList, KeywordList, NameKey, abbreviate, name_key, normalize, tex_to_text
+from winston.features.digest import AuthorList, ListingNotReady, KeywordList, NameKey, abbreviate, name_key, normalize, tex_to_text
 
 FIXTURE = Path(__file__).parent / "fixtures" / "astro-ph.rss"
 
@@ -159,17 +159,19 @@ def test_digest_posts_once_with_expected_lines(digest_bot, tmp_path):
     post = bot.client.sent[0]
     assert post["to"] == "papers-test" and post["topic"] == "Winston's Daily Arxiv Highlights"
     lines = post["content"].split("\n")
-    assert lines[0] == "**arXiv astro-ph, Friday 18 September 2026** — 3 papers"
-    assert lines[1] == (
-        '- S. Wang, F. Zou, E. Gallo, …, **W. N. Brandt**, et al.: "Chandra Lensing-cluster Ultradeep Extragalactic '
-        'Survey (CLUES) I: A 2 Ms Point-Source Catalog of the Abell 2744 Field" https://arxiv.org/abs/2609.17673'
+    assert lines[0] == "**arXiv astro-ph, Friday 18 September 2026** (3 papers)"
+    assert lines[1:3] == ["", "**Colleagues**"]
+    assert lines[3] == (
+        "- S. Wang, F. Zou, E. Gallo, …, **W. N. Brandt**, et al.: "
+        "[Chandra Lensing-cluster Ultradeep Extragalactic Survey (CLUES) I: A 2 Ms Point-Source Catalog of the Abell 2744 Field]"
+        "(https://arxiv.org/abs/2609.17673)"
     )
-    assert lines[2] == (
-        '- M. N. Le, J. H. Knapen, **Ž. Ivezić**, et al.: "Rubin LSST DP2 unveils almost-dark galaxies in the Virgo Cluster" '
-        "https://arxiv.org/abs/2609.19246"
+    assert lines[4] == (
+        "- M. N. Le, J. H. Knapen, **Ž. Ivezić**, et al.: "
+        "[Rubin LSST DP2 unveils almost-dark galaxies in the Virgo Cluster](https://arxiv.org/abs/2609.19246)"
     )
-    assert lines[3].startswith('- V. R. Soares da Silva, **D. López-Cano**, L. R. Abramo, J. Chaves-Montero, F. Maion: "Where the Forest')
-    assert len(lines) == 4
+    assert lines[5].startswith("- V. R. Soares da Silva, **D. López-Cano**,")
+    assert len(lines) == 6
     # the replaced paper by de la Cruz Rodríguez is not flagged
     assert "2406.17234" not in post["content"]
 
@@ -179,17 +181,20 @@ def test_digest_posts_once_with_expected_lines(digest_bot, tmp_path):
     assert sorted(state["features"]["digest"]["posted"]) == ["2609.17673", "2609.19187", "2609.19235", "2609.19246"]
 
 
-def test_digest_keyword_hits_follow_author_hits(digest_bot, tmp_path):
+def test_digest_sections_colleagues_then_categories(digest_bot, tmp_path):
     (tmp_path / "arxiv_digest_keywords.txt").write_text("dynamo\nVirgo cluster\n", encoding="utf-8")
     digest = next(f for f in digest_bot.features if f.name == "digest")
     assert digest.post_digest(digest_bot) == 4
     lines = digest_bot.client.sent[0]["content"].split("\n")
-    assert lines[0].endswith("— 4 papers")
-    assert lines[2].endswith("https://arxiv.org/abs/2609.19246 (Virgo cluster)")  # author hit, keyword shown too
-    assert lines[4] == (
-        "- S. Verma, K. Seshasayanan: \"Effects of radial conductivity variation on the Ponomarenko dynamo\" "
-        "https://arxiv.org/abs/2609.19187 (dynamo)"
-    )
+    assert lines[0].endswith("(4 papers)")
+    assert lines[2] == "**Colleagues**"
+    assert lines[4].endswith("(https://arxiv.org/abs/2609.19246)")  # a colleague's paper needs no keywords
+    assert lines[6:] == [
+        "",
+        "**Solar and stellar**",
+        "- S. Verma, K. Seshasayanan: "
+        "[Effects of radial conductivity variation on the Ponomarenko dynamo](https://arxiv.org/abs/2609.19187) (dynamo)",
+    ]
 
 
 def test_digest_falls_back_to_feed_names(digest_bot, monkeypatch):
@@ -242,5 +247,16 @@ def test_digest_line_converts_math_in_the_title(digest_bot):
         abstract="",
     )
     _, line = digest._line(entry, ("W. N. Brandt",), AuthorList.parse("Brandt\n"), [])
-    assert '"Reconnection at $$\\beta \\sim 1$$ in PSR J0740+6620"' in line
+    assert "[Reconnection at $$\\beta \\sim 1$$ in PSR J0740+6620](https://arxiv.org/abs/2609.00001)" in line
 
+
+
+def test_empty_weekday_listing_is_retried_but_weekend_is_quiet(digest_bot, monkeypatch):
+    digest = next(f for f in digest_bot.features if f.name == "digest")
+    monkeypatch.setattr(arxiv, "fetch_listing", lambda category: (dt.date(2026, 9, 29), []))  # a Tuesday, feed not built yet
+    with pytest.raises(ListingNotReady):
+        digest.post_digest(digest_bot)
+    digest_bot._on_event(event(dm_message(1, "digest")))
+    assert digest_bot.client.sent[-1]["content"].startswith("Today's arXiv listing is still being typeset.")
+    monkeypatch.setattr(arxiv, "fetch_listing", lambda category: (dt.date(2026, 9, 26), []))  # Saturday: no announcements
+    assert digest.post_digest(digest_bot) == 0

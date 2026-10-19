@@ -10,7 +10,7 @@ When someone posts an arXiv link in `#papers`, Winston replies in the same topic
 
 ## Daily arXiv digest
 
-Every weekday morning Winston reads the new astro-ph listing, keeps the papers with an author from `arxiv_digest_authors.txt` or a keyword from `arxiv_digest_keywords.txt` in the title or abstract, and posts one message in `#papers`. Nothing is posted on days without a hit.
+Every weekday morning Winston reads the new astro-ph listing, keeps the papers with an author from `arxiv_digest_authors.txt` or a keyword from `arxiv_digest_keywords.txt` in the title or abstract, and posts one message in `#papers`. Papers by colleagues come first; the rest are grouped by arXiv subcategory (high-energy, galaxies, solar and stellar, …, cross-lists), with the matched keywords in parentheses. Each title links to the paper. Nothing is posted on days without a hit.
 
 ## Lunch menu
 

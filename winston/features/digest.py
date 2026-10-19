@@ -15,7 +15,18 @@ from winston.features.base import Feature
 log = logging.getLogger(__name__)
 
 POSTED_LIMIT = 2000
-DEFAULT_HEADER = "**arXiv {categories}, {date}** — {papers}"
+DEFAULT_HEADER = "**arXiv {categories}, {date}** ({papers})"
+COLLEAGUES = "Colleagues"
+SECTIONS = {  # primary category -> digest section, in posting order
+    "astro-ph.HE": "High-energy astrophysics",
+    "astro-ph.GA": "Galaxies",
+    "astro-ph.SR": "Solar and stellar",
+    "astro-ph.CO": "Cosmology",
+    "astro-ph.EP": "Planets",
+    "astro-ph.IM": "Instrumentation and methods",
+}
+CROSS_LISTS = "Cross-list posts"
+_SECTION_ORDER = [COLLEAGUES, *SECTIONS.values(), CROSS_LISTS]
 
 # TeX letter commands that stand for a letter; accent commands (\v \c \u \H ...) map to nothing.
 _TEX_LETTERS = {"ss": "ss", "ae": "ae", "oe": "oe", "aa": "a", "o": "o", "l": "l", "i": "i", "j": "j",
@@ -154,6 +165,10 @@ def given_names_match(entry: tuple[str, ...], author: tuple[str, ...]) -> bool:
     return any(token == wanted or (len(token) == 1 and token == wanted[0]) for token in author)
 
 
+class ListingNotReady(RuntimeError):
+    """arXiv serves an empty feed for a weekday until the day's build finishes, a few minutes after 05 UTC."""
+
+
 class Digest(Feature):
     name = "digest"
     description = "every morning I comb the new astro-ph listings for papers and bananas; `digest` asks me to do it right now"
@@ -175,7 +190,11 @@ class Digest(Feature):
         return msg.command is not None and msg.command.strip().lower() == "digest"
 
     def handle(self, msg, bot):
-        count = self.post_digest(bot)
+        try:
+            count = self.post_digest(bot)
+        except ListingNotReady:
+            bot.reply(msg, "Today's arXiv listing is still being typeset. Give it a few minutes and ask again.")
+            return
         if count:
             bot.reply(msg, f"{count} notable paper{'s' if count != 1 else ''}, filed in #**{self.settings['channel']}>{self.settings['topic']}**.")
         else:
@@ -199,6 +218,8 @@ class Digest(Feature):
             day = listing_day if day is None else max(day, listing_day)
             for entry in entries:
                 listings.setdefault(entry.id, entry)
+        if not listings and day is not None and day.weekday() < 5:  # raising makes the scheduler retry within grace
+            raise ListingNotReady(f"arXiv listing for {day} is empty")
         fresh = [e for e in listings.values() if e.announce_type in self.announce_types and e.id not in posted]
         topics = {e.id: keywords.matches(f"{e.title} {e.abstract}") for e in fresh}
         by_author = {e.id for e in fresh if any(authors.matches(a) for a in e.authors)}
@@ -211,7 +232,7 @@ class Digest(Feature):
                 self._line(e, names_by_id.get(e.id) or tuple(tex_to_text(a) for a in e.authors), authors, topics[e.id])
                 for e in hits
             ]
-            lines.sort(key=lambda pair: pair[0])  # stable: keyword-only hits keep the listing order
+            lines.sort(key=lambda pair: pair[0])  # stable: papers in a category section keep the listing order
             n = len(hits)
             header = self.settings.get("header", DEFAULT_HEADER).format(
                 categories=", ".join(self.categories),
@@ -219,7 +240,13 @@ class Digest(Feature):
                 n=n,
                 papers=f"{n} paper{'s' if n != 1 else ''}",
             )
-            bot.post(self.settings["channel"], self.settings["topic"], "\n".join([header] + [line for _, line in lines]))
+            body, section = [header], None
+            for (_, line_section, _), line in lines:
+                if line_section != section:
+                    section = line_section
+                    body += ["", f"**{section}**"]
+                body.append(line)
+            bot.post(self.settings["channel"], self.settings["topic"], "\n".join(body))
 
         posted.extend(e.id for e in fresh)
         del posted[:-POSTED_LIMIT]
@@ -235,8 +262,9 @@ class Digest(Feature):
             log.warning("arXiv API unavailable, using feed author names", exc_info=True)
             return {}
 
-    def _line(self, entry: arxiv.Listing, names: tuple[str, ...], authors: AuthorList, topics: list[str]) -> tuple[tuple[int, str], str]:
-        """(sort key, Markdown line) for one flagged paper: author hits first by surname, then keyword hits."""
+    def _line(self, entry: arxiv.Listing, names: tuple[str, ...], authors: AuthorList, topics: list[str]) -> tuple[tuple[int, str, str], str]:
+        """(sort key, Markdown line) for one flagged paper. The key orders the sections, then colleagues by surname;
+        its middle element is the section title."""
         matched = [authors.matches(n) is not None for n in names]
         shown = [f"**{abbreviate(n)}**" if hit else abbreviate(n) for n, hit in zip(names, matched)]
         limit = int(self.settings.get("max_listed_authors", 6))
@@ -244,6 +272,10 @@ class Digest(Feature):
             extra = [s for s, hit in zip(shown[3:], matched[3:]) if hit]
             shown = shown[:3] + (["…"] + extra if extra else []) + ["et al."]
         first_hit = next((name_key(n).surname for n, hit in zip(names, matched) if hit), None)  # type: ignore[union-attr]
-        suffix = f" ({', '.join(topics)})" if topics else ""
-        line = f'- {", ".join(shown)}: "{arxiv.zulip_math(entry.title)}" {entry.abs_url}{suffix}'
-        return (0, first_hit) if first_hit is not None else (1, ""), line
+        if first_hit is not None:
+            section, suffix = COLLEAGUES, ""
+        else:
+            primary = entry.categories[0] if entry.categories else ""
+            section, suffix = SECTIONS.get(primary, CROSS_LISTS), f" ({', '.join(topics)})" if topics else ""
+        line = f"- {', '.join(shown)}: [{arxiv.zulip_math(entry.title)}]({entry.abs_url}){suffix}"
+        return (_SECTION_ORDER.index(section), section, first_hit or ""), line

@@ -31,7 +31,7 @@ authors = "arxiv_digest_authors.txt"     # names to watch for, one per line, rel
 keywords = "arxiv_digest_keywords.txt"   # words and phrases to look for in titles and abstracts
 max_listed_authors = 6         # longer author lists are shortened to the first three plus the matches
 # First line of the post; placeholders: {categories}, {date}, {n}, {papers} ("3 papers")
-header = "**arXiv {categories}, {date}**"
+header = "**arXiv {categories}, {date}** ({papers})"
 
 [features.secret]
 secrets = "secrets.txt"        # one phrase per line, told one per day in direct messages; kept out of git
