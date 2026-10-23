@@ -10,6 +10,7 @@ from winston.bot import Config, Winston
 from winston.features import menu
 
 UNICAFE = json.loads((Path(__file__).parent / "fixtures" / "unicafe.json").read_text(encoding="utf-8"))
+TORNADO = (Path(__file__).parent / "fixtures" / "tornado.html").read_text(encoding="utf-8")
 MENU_POST = """\
 **Lunch at Kumpula, Wednesday 23 September**
 - [Chemicum Teachers restaurant](https://unicafe.fi/en/restaurants/chemicum-teachers-restaurant/):
@@ -24,7 +25,11 @@ MENU_POST = """\
     - Kasviskepukoita & raikasta maissisalsaa 🌱
     - Chili con Unlimited Jauhis 🌱
     - Kreikkalainen tomaattikeitto 🌱
-    - Meksikolaista broileria ja maissisalsaa"""
+    - Meksikolaista broileria ja maissisalsaa
+- [Tornado](https://www.compass-group.fi/ravintolat-ja-ruokalistat/foodco/kaupungit/helsinki/ravintola-tornado/):
+    - Sweet and sour tofua ja kasviksia, Basmatiriisiä 🌱
+    - Kinkku-pekonikastiketta ja Pastaa
+    - Pintasavustettua kirjolohta, Aiolia, Kermaperunaa"""
 
 BOT_ID = 99
 BOT_EMAIL = "winston-bot@example.com"
@@ -124,8 +129,9 @@ def fake_fetch(monkeypatch):
 
 @pytest.fixture
 def fake_unicafe(monkeypatch):
-    """Serve the Unicafe fixture instead of the API, with today Wed 23.9.2026; returns a setter for today."""
+    """Serve the Unicafe and Tornado fixtures instead of the APIs, with today Wed 23.9.2026; returns a setter for today."""
     monkeypatch.setattr(menu, "fetch_restaurants", lambda lang: UNICAFE)
+    monkeypatch.setattr(menu, "fetch_compass_menu", lambda cost_center, day: TORNADO if day == dt.date(2026, 9, 23) else "")
 
     def set_day(day):
         monkeypatch.setattr(menu, "today", lambda tz: day)

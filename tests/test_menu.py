@@ -1,6 +1,7 @@
 import datetime as dt
 
 from tests.conftest import MENU_POST as EXPECTED
+from tests.conftest import TORNADO
 from tests.conftest import UNICAFE as FIXTURE
 from tests.conftest import dm_message, event
 from winston.features import menu as menu_module
@@ -19,7 +20,7 @@ def test_configured_order_main_dishes_only():
 
 
 def test_message_format():
-    rows = menu_module.todays_menu(FIXTURE, menu_module.DEFAULT_RESTAURANTS, WEDNESDAY)
+    rows = menu_module.todays_menu(FIXTURE, menu_module.DEFAULT_RESTAURANTS, WEDNESDAY, {"Tornado": TORNADO})
     assert menu_module.format_menu(WEDNESDAY, rows) == EXPECTED
 
 

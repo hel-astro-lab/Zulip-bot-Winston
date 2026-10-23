@@ -14,7 +14,7 @@ Every weekday morning Winston reads the new astro-ph listing, keeps the papers w
 
 ## Lunch menu
 
-Every weekday Winston posts the main dishes of the Kumpula Unicafé restaurants in `#random > Lunch`. The menu comes from the JSON feed behind unicafe.fi. `@Winston menu` shows today's menu anywhere.
+Every weekday Winston posts the main dishes of the Kumpula Unicafé restaurants and of Tornado in Dynamicum in `#random > Lunch`. The menus come from the JSON feeds behind unicafe.fi and compass-group.fi; Tornado's is in Finnish only. `@Winston menu` shows today's menu anywhere.
 
 # Setup
 
